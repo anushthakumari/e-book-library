@@ -1,8 +1,25 @@
 import express from "express";
+import multer from "multer";
+import fs from "fs";
+
 import Book from "../models/Book.js";
 import BookCategory from "../models/BookCategory.js";
 
 const router = express.Router();
+
+const storage = multer.diskStorage({
+	destination: (req, file, cb) => {
+		if (!fs.existsSync("./uploads/")) {
+			fs.mkdirSync("./uploads/");
+		}
+		cb(null, "./uploads/");
+	},
+	filename: (req, file, cb) => {
+		cb(null, `${Date.now()}-${file.originalname}`);
+	},
+});
+
+const upload = multer({ storage: storage });
 
 /* Get all books in the db */
 router.get("/allbooks", async (req, res) => {
@@ -40,7 +57,7 @@ router.get("/", async (req, res) => {
 });
 
 /* Adding book */
-router.post("/addbook", async (req, res) => {
+router.post("/addbook", upload.single("image"), async (req, res) => {
 	if (req.body.isAdmin) {
 		try {
 			const newbook = await new Book({
@@ -52,6 +69,8 @@ router.post("/addbook", async (req, res) => {
 				publisher: req.body.publisher,
 				bookStatus: req.body.bookSatus,
 				categories: req.body.categories,
+				desc: req.body.desc,
+				filename: req.file.filename,
 			});
 			const book = await newbook.save();
 			await BookCategory.updateMany(
