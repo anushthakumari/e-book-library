@@ -137,4 +137,27 @@ router.get("/stats", async (req, res) => {
 	});
 });
 
+router.get("/popular", async (req, res) => {
+	try {
+		const books = await Book.find().sort({ transactions: -1 }).exec();
+
+		const booksWithTransactionLength = books.map((book) => ({
+			_id: book._id,
+			bookName: book.bookName,
+			author: book.author,
+			filename: book.filename,
+			desc: book.desc,
+			transactions: {
+				length: book.transactions.length,
+				details: book.transactions,
+			},
+		}));
+
+		res.json(booksWithTransactionLength);
+	} catch (err) {
+		console.error(err);
+		res.status(500).send("Internal Server Error");
+	}
+});
+
 export default router;
