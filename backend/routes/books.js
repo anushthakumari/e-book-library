@@ -4,6 +4,7 @@ import fs from "fs";
 
 import Book from "../models/Book.js";
 import BookCategory from "../models/BookCategory.js";
+import User from "../models/User.js";
 
 const router = express.Router();
 
@@ -120,6 +121,20 @@ router.delete("/removebook/:id", async (req, res) => {
 	} else {
 		return res.status(403).json("You dont have permission to delete a book!");
 	}
+});
+
+router.get("/stats", async (req, res) => {
+	const totalBooks = await Book.countDocuments();
+	const totalUsers = await User.countDocuments({ isAdmin: false });
+	const totalReservedBooks = await Book.countDocuments({
+		bookStatus: "Reserved",
+	});
+
+	res.json({
+		totalBooks,
+		totalUsers,
+		totalReservedBooks,
+	});
 });
 
 export default router;
